@@ -19,7 +19,7 @@ import datetime
 count_list = {'all_count': 0, "single_count": 0}
 # 定义一个列表，存储不同内容页面的class标签，供页面随机跳转选择使用
 page_list = ['党史教育', '科学百科',
-             '健康生活', '安全科学', '科技前沿',
+             '健康生活', '科技前沿',
              '军事科技', '实用技术', '天文地理']
 
 
@@ -27,7 +27,8 @@ page_list = ['党史教育', '科学百科',
 def setUp(root, cookie_name):
 
     browser = webdriver.Chrome(r'E:\chromedriver.exe')  # 指定驱动
-    url = "https://www.tfkjy.cn/popularscience/kpResource/kp-source-new.html"    # 天府科技云登录链接
+    url = "https://www.tfkjy.cn/popularscience" \
+          "/kpResource/kp-source-new.html"    # 天府科技云登录链接
     # 访问网站，清空旧cookies信息
     browser.get(url)
     browser.delete_all_cookies()
@@ -40,7 +41,12 @@ def setUp(root, cookie_name):
 
     # 验证是否登录成功
     browser.get(url)
-    print("---------------------cookie登录已成功！当前登录用户为：" + cookie_name + "--------------------")
+    Time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print("-------"
+          + Time
+          + ":---------cookie登录已成功！当前登录用户为："
+          + cookie_name
+          + "---------------")
     try:
         # 登录成功后尝试进行阅读
         ContentRandomSelect(browser)
@@ -58,7 +64,7 @@ def AutoStart(browser):
     count = 0
     # 获取当前列表页的句柄
     handle = browser.current_window_handle
-    sleep(5)
+    sleep(2)
     # 获取内容列表
     lists = browser.find_elements_by_class_name("kp-recommend-top-title")
     # 循环点击并查看
@@ -78,15 +84,20 @@ def AutoStart(browser):
         count_list["all_count"] += 1
         # 将本次读完的10篇文章加入单次内容条数内
         count_list["single_count"] += 1
-        # 跳转到科普苑主页
-        browser.switch_to_window(handle)
+        # # 跳转到科普苑主页
+        # browser.switch_to_window(handle)
+        sleep(1)
         if count == len(lists):
             # 跳转到下一页面
             browser.switch_to_window(handle)
             sleep(2)
             browser.find_element_by_xpath('//a[@class="next"]').click()
+            Time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             # 打印总计的浏览数
-            print("目前已浏览总计" + str(count_list["all_count"]) + "篇文章")
+            print(Time
+                  + ":目前已浏览总计"
+                  + str(count_list["all_count"])
+                  + "篇文章")
             AutoStart(browser)
         # 如果单次内容条数大于50，则
         elif count_list["single_count"] >= 50:
@@ -94,7 +105,6 @@ def AutoStart(browser):
             count_list["single_count"] = 0
             # 跳转到科普苑主页
             browser.switch_to_window(handle)
-            sleep(2)
             break
 
 
@@ -103,18 +113,24 @@ def ContentRandomSelect(browser):
     # 总计2次内容大类的跳转,每类内容读50条
     for i in range(2):
         # 根据给定列表内容进行跳转
-        sleep(2)
-        target_title = page_list[random.randint(0, 7)]
+        sleep(10)
+        target_title = page_list[random.randint(0, 6)]
         page = browser.find_element_by_xpath(
             "//div[@class='li drag-item' and text()='"
             + target_title
             + "']")
         page.click()
-        print("第" + str(i+1) + "次随机切换内容！当前阅读内容为 --> " + str(target_title))
+        print("第"
+              + str(i+1)
+              + "次随机切换内容！当前阅读内容为 --> "
+              + str(target_title))
         # 执行该类内容的自动阅读
+        sleep(3)
         AutoStart(browser)
+        # 如果总计条数大于等于100，则退出当前账号，切换下一条账号
         if count_list["all_count"] >= 100:
-            print("当前账号阅读条数已达到100，已自动退出账号")
+            Time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(Time + "：当前账号阅读条数已达到100，已自动退出账号")
             count_list["single_count"] = 0
             count_list["all_count"] = 0
             browser.quit()
@@ -126,23 +142,24 @@ def GetFiles():
     cookie_dir = "./cookies"
     for root, dirs, file in os.walk(cookie_dir, topdown=False):
         for f in file:
-            sleep(10)
+            sleep(2)
             setUp(root, f)
-            sleep(60)
+            sleep(30)
 
 
 # 这是定时函数
-def schedule_run(start_time):
+def ScheduleRun(start_time, second_time):
     schedule.every().day.at(start_time).do(GetFiles)
+    schedule.every().day.at(second_time).do(GetFiles)
     while True:         # 通过循环暴力查看时间，保证执行
         schedule.run_pending()
-        time.sleep(60)
-        Time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print(str(Time) + "正在等待执行")
+        time.sleep(0.5)
 
 
 # 主函数入口
 if __name__ == "__main__":
     # 设定定时任务的时间
-    times = "06:00"
-    schedule_run(times)
+    times1 = "02:20"
+    times2 = "05:20"
+    ScheduleRun(times1, times2)
+    # GetFiles()
