@@ -21,12 +21,21 @@ count_list = {'all_count': 0, "single_count": 0}
 page_list = ['党史教育', '科学百科',
              '健康生活', '科技前沿',
              '军事科技', '实用技术', '天文地理']
+# 定义不需要刷的文件
+no_use = [""]
 
 
 # 根据cookie免登录
 def setUp(root, cookie_name):
-
-    browser = webdriver.Chrome(r'E:\chromedriver.exe')  # 指定驱动
+    # 读取驱动设置
+    option = webdriver.ChromeOptions()
+    # 设置浏览器隐藏，不弹出，静默执行
+    option.add_argument('headless')
+    # 设置驱动路径
+    chromeDriverPath = r'.\driver\chromedriver.exe'
+    # 添加设置，并指定驱动
+    browser = webdriver.Chrome(chromeDriverPath,
+                               chrome_options=option)
     url = "https://www.tfkjy.cn/popularscience" \
           "/kpResource/kp-source-new.html"    # 天府科技云登录链接
     # 访问网站，清空旧cookies信息
@@ -143,8 +152,14 @@ def GetFiles():
     for root, dirs, file in os.walk(cookie_dir, topdown=False):
         for f in file:
             sleep(2)
-            setUp(root, f)
-            sleep(30)
+            # 判断当前cookie是否在不需要刷的列表里，在就跳过
+            if f in no_use:
+                print("|||||||"+str(f)+"|||||||-->已跳过该账号！")
+                continue
+            else:
+                setUp(root, f)
+                sleep(30)
+        print("所有账号均已执行完毕！")
 
 
 # 这是定时函数
@@ -159,7 +174,7 @@ def ScheduleRun(start_time, second_time):
 # 主函数入口
 if __name__ == "__main__":
     # 设定定时任务的时间
-    times1 = "02:20"
-    times2 = "05:20"
+    times1 = "01:30"
+    times2 = "03:50"
     ScheduleRun(times1, times2)
     # GetFiles()
